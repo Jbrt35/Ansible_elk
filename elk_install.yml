@@ -1,1 +1,96 @@
+---
+- name: Installation d'Elasticsearch, Kibana, et Logstash sur Debian
+  hosts: elk
+  become: yes
+  tasks:
+    - name: Télécharger le paquet Elasticsearch
+      get_url:
+        url: https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.14.1-amd64.deb
+        dest: /tmp/elasticsearch-8.14.1-amd64.deb
+
+    - name: Télécharger le paquet Kibana
+      get_url:
+        url: https://artifacts.elastic.co/downloads/kibana/kibana-8.14.1-amd64.deb
+        dest: /tmp/kibana-8.14.1-amd64.deb
+
+    - name: Télécharger le paquet Logstash
+      get_url:
+        url: https://artifacts.elastic.co/downloads/logstash/logstash-8.14.1-amd64.deb
+        dest: /tmp/logstash-8.14.1-amd64.deb
+
+    - name: Installer Elasticsearch
+      command: dpkg -i /tmp/elasticsearch-8.14.1-amd64.deb
+      ignore_errors: yes
+
+    - name: Installer Kibana
+      command: dpkg -i /tmp/kibana-8.14.1-amd64.deb
+      ignore_errors: yes
+
+    - name: Installer Logstash
+      command: dpkg -i /tmp/logstash-8.14.1-amd64.deb
+      ignore_errors: yes
+
+    - name: Copy elasticsearch.yml                                                                                                                                                                                                          
+      copy:                                                                                                                                                                                                                                 
+        src: elasticsearch.yml                                                                                                                                                                                                              
+        dest: /etc/elasticsearch/                                                                                                                                                                                                           
+        owner: root                                                                                                                                                                                                                         
+        group: root                                                                                                                                                                                                                         
+        mode: 0644                                                                                                                                                                                                                          
+        remote_src: yes                                                                                                                                                                                                                     
+      notify: Restart elasticsearch
+
+    - name: Copy kibana.yml
+      copy:
+        src: kibana.yml
+        dest: /etc/kibana/
+        owner: root
+        group: root
+        mode: 0644
+        remote_src: yes
+      notify: Restart kibana
+
+    - name: Copy logstash.yml
+      copy:
+        src: logstash.yml
+        dest: /etc/logstash/
+        owner: root
+        group: root
+        mode: 0644
+        remote_src: yes
+      notify: Restart logstash
+
+    - name: Démarrer et activer Elasticsearch
+      systemd:
+        name: elasticsearch
+        state: started
+        enabled: yes
+
+    - name: Démarrer et activer Kibana
+      systemd:
+        name: kibana
+        state: started
+        enabled: yes
+
+    - name: Démarrer et activer Logstash
+      systemd:
+        name: logstash
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: Restart elasticsearch
+      systemd:
+        name: elasticsearch
+        state: restarted
+
+    - name: Restart kibana
+      systemd:
+        name: kibana
+        state: restarted
+
+    - name: Restart logstash
+      systemd:
+        name: logstash
+        state: restarted
 
